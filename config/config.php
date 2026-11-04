@@ -13,7 +13,7 @@ return [
     'per_page'       => 30,
     'fetch_timeout'  => 15,   // secondes par flux
     'user_agent'     => 'VeilleNumerique/1.0 (+https://emmanuellecode.fr)',
-    // Laisser vide si le site est à la racine du domaine (cas normal).
-    // Exemple si installé dans un sous-dossier : '/veille'
-    'base_path'      => '',
+    // Sous-dossier où le site est installé : emmanuellecode.fr/veille
+    // Laisser vide si le site est un jour à la racine du domaine.
+    'base_path'      => '/veille',
 ];

@@ -1,7 +1,8 @@
 # Veille Numérique
 
 Ma veille personnelle sur le numérique : IA, Data, Web & dev, Product & projet, Automatisation, Cyber, Régulation.
-Site en ligne sur [emmanuellecode.fr](https://emmanuellecode.fr), déployé depuis ce dépôt.
+Site en ligne sur [emmanuellecode.fr/veille](https://emmanuellecode.fr/veille), déployé depuis ce dépôt
+dans le dossier `public_html/veille` (réglage `base_path` dans `config/config.php`).
 
 Site PHP 8.1+ en architecture MVC, sans framework ni dépendance. Base SQLite (aucune base MySQL à créer).
 
@@ -29,13 +30,14 @@ et ignorés par Git (voir `.gitignore`). Seul `storage/.gitkeep` est versionné.
 ## Mise en ligne sur Hostinger
 
 1. hPanel → **Avancé** → **Configuration PHP** : PHP 8.1 ou plus.
-2. Déploiement depuis ce dépôt (branche `main`) vers `public_html` de emmanuellecode.fr.
-3. Va sur https://emmanuellecode.fr : choisis ton mot de passe.
+2. hPanel → **Avancé** → **Git** : dépôt `Emmanuelle-nsossani/veille`, branche `main`, dossier `veille`,
+   avec le déploiement automatique activé.
+3. Va sur https://emmanuellecode.fr/veille : choisis ton mot de passe.
 4. Page **Sources** → **Récupérer maintenant**. Les sources en erreur sont signalées en rouge :
    désactive-les ou remplace leur adresse.
 5. hPanel → **Avancé** → **Tâches Cron** : tâche quotidienne (ex. 6h30) avec la commande
    affichée sur la page Sources, de la forme :
-   `/usr/bin/php /home/uXXXXXXX/domains/emmanuellecode.fr/public_html/cron/fetch.php`
+   `/usr/bin/php /home/uXXXXXXX/domains/emmanuellecode.fr/public_html/veille/cron/fetch.php`
 
 ## Tester en local
 
@@ -43,7 +45,7 @@ et ignorés par Git (voir `.gitignore`). Seul `storage/.gitkeep` est versionné.
 php -S localhost:8000 index.php
 ```
 
-Puis http://localhost:8000 (la redirection HTTPS du `.htaccess` ne s'applique pas avec ce serveur).
+Avec `base_path` vidé dans `config/config.php`, puis http://localhost:8000 (la redirection HTTPS du `.htaccess` ne s'applique pas avec ce serveur).
 
 ## Personnaliser
 

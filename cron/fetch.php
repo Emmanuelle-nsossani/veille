@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 /**
  * Récupération quotidienne des flux, à lancer par le cron de Hostinger :
- *   php /home/<utilisateur>/domains/emmanuellecode.fr/public_html/cron/fetch.php
+ *   php /home/<utilisateur>/domains/emmanuellecode.fr/public_html/veille/cron/fetch.php
  * (le chemin exact est affiché sur la page /sources du site)
  */
 
