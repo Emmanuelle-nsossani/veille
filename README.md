@@ -1,1 +1,65 @@
-# veille
+# Veille Numérique
+
+Ma veille personnelle sur le numérique : IA, Data, Web & dev, Product & projet, Automatisation, Cyber, Régulation.
+Site en ligne sur [emmanuellecode.fr](https://emmanuellecode.fr), déployé depuis ce dépôt.
+
+Site PHP 8.1+ en architecture MVC, sans framework ni dépendance. Base SQLite (aucune base MySQL à créer).
+
+## Structure
+
+```
+index.php            Contrôleur frontal + routes
+.htaccess            Réécriture d'URL, HTTPS, blocage des dossiers sensibles
+app/Core/            Routeur, base de données, authentification, contrôleur parent, fonctions de vue
+app/Models/          Article, Source (accès aux données)
+app/Controllers/     Fil, connexion, sources, API JSON, cron par URL
+app/Services/        Récupération RSS/Atom, classement par thème
+app/Views/           Gabarits HTML
+config/              Réglages, sources RSS de départ, thèmes et mots-clés
+cron/fetch.php       Script de récupération quotidienne
+assets/              CSS et JS
+storage/             Base SQLite, secrets et sessions (créés sur le serveur, jamais versionnés)
+```
+
+## Ce qui n'est jamais dans le dépôt
+
+`storage/veille.sqlite`, `storage/secrets.json` et `storage/sessions/` sont créés sur le serveur
+et ignorés par Git (voir `.gitignore`). Seul `storage/.gitkeep` est versionné.
+
+## Mise en ligne sur Hostinger
+
+1. hPanel → **Avancé** → **Configuration PHP** : PHP 8.1 ou plus.
+2. Déploiement depuis ce dépôt (branche `main`) vers `public_html` de emmanuellecode.fr.
+3. Va sur https://emmanuellecode.fr : choisis ton mot de passe.
+4. Page **Sources** → **Récupérer maintenant**. Les sources en erreur sont signalées en rouge :
+   désactive-les ou remplace leur adresse.
+5. hPanel → **Avancé** → **Tâches Cron** : tâche quotidienne (ex. 6h30) avec la commande
+   affichée sur la page Sources, de la forme :
+   `/usr/bin/php /home/uXXXXXXX/domains/emmanuellecode.fr/public_html/cron/fetch.php`
+
+## Tester en local
+
+```
+php -S localhost:8000 index.php
+```
+
+Puis http://localhost:8000 (la redirection HTTPS du `.htaccess` ne s'applique pas avec ce serveur).
+
+## Personnaliser
+
+- Thèmes et mots-clés : `config/themes.php` (mots entiers, « s » final toléré)
+- Durée de conservation des articles (60 jours, favoris jamais supprimés) : `config/config.php`
+- Sources : directement depuis la page /sources du site
+
+## Vers l'application mobile
+
+L'API JSON est prête (jeton affiché sur la page Sources) :
+
+- `GET /api/articles?theme=ia&view=unread&q=…&limit=50&offset=0&since=2026-11-01`
+- `GET /api/themes`
+- En-tête : `Authorization: Bearer <jeton>`
+
+## Mot de passe oublié
+
+Supprime `storage/secrets.json` via le gestionnaire de fichiers, puis retourne sur le site
+pour en choisir un nouveau (le jeton de l'API et du cron change aussi).

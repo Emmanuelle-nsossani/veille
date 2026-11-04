@@ -1,0 +1,17 @@
+# Données et secrets créés sur le serveur : jamais dans le dépôt
+storage/*
+!storage/.gitkeep
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+
+# Archives de mise en ligne
+*.zip
+
+# Fichiers système et éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
