@@ -8,7 +8,9 @@ use App\Core\Controller;
 use App\Models\Article;
 use App\Models\Source;
 use App\Services\FeedFetcher;
+use App\Services\Summarizer;
 use App\Services\ThemeClassifier;
+use App\Services\TrendRefresher;
 
 class SourceController extends Controller
 {
@@ -21,6 +23,8 @@ class SourceController extends Controller
             'token'   => Auth::secrets($this->config)['token'] ?? '',
             'siteUrl' => 'https://' . $host . rtrim($this->config['base_path'], '/'),
             'rootDir' => ROOT,
+            'aiKey'   => (new Summarizer($this->config))->apiKey(),
+            'aiError' => (new Summarizer($this->config))->lastError(),
         ]);
     }
 
@@ -58,6 +62,30 @@ class SourceController extends Controller
         $this->redirect('/sources');
     }
 
+    /** Enregistre ou retire la clé API Claude utilisée pour les résumés de tendances. */
+    public function saveAi(): void
+    {
+        $this->requireLogin();
+        $this->requireCsrf();
+        $summarizer = new Summarizer($this->config);
+
+        if (($_POST['action'] ?? '') === 'delete') {
+            $summarizer->saveApiKey(null);
+            $this->flash('success', 'Clé retirée : les résumés seront faits à partir d’extraits.');
+            $this->redirect('/sources');
+        }
+
+        $key = trim((string) ($_POST['api_key'] ?? ''));
+        if (!preg_match('/^sk-ant-[A-Za-z0-9_-]{20,}$/', $key)) {
+            $this->flash('error', 'Cette clé ne ressemble pas à une clé API Claude (elle commence par sk-ant-).');
+            $this->redirect('/sources');
+        }
+        $summarizer->saveApiKey($key);
+        $this->db->exec("UPDATE trends SET summary = '' WHERE summary_source = 'extraits'");
+        $this->flash('success', 'Clé enregistrée. Les résumés IA seront rédigés à la prochaine récupération.');
+        $this->redirect('/sources');
+    }
+
     /** Récupération manuelle depuis l'interface. */
     public function refresh(): void
     {
@@ -66,9 +94,10 @@ class SourceController extends Controller
         @set_time_limit(300);
         $fetcher = new FeedFetcher($this->config, new Source($this->db), new Article($this->db), new ThemeClassifier($this->themes));
         $report = $fetcher->run();
+        $report['trends'] = (new TrendRefresher($this->db, $this->config))->run();
         $this->flash(
             $report['errors'] ? 'warning' : 'success',
-            "{$report['new']} nouvel(s) article(s) depuis {$report['sources']} source(s)"
+            "{$report['new']} nouvel(s) article(s) depuis {$report['sources']} source(s), {$report['trends']} tendance(s)"
             . ($report['errors'] ? " — {$report['errors']} source(s) en erreur, voir le détail ci-dessous." : '.')
         );
         $this->redirect('/sources');

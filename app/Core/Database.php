@@ -79,6 +79,21 @@ class Database
                 is_favorite  INTEGER NOT NULL DEFAULT 0,
                 UNIQUE (source_id, guid)
             );
+            CREATE TABLE IF NOT EXISTS trends (
+                slug           TEXT PRIMARY KEY,
+                term           TEXT NOT NULL,
+                label          TEXT NOT NULL,
+                terms          TEXT NOT NULL DEFAULT '[]',
+                article_ids    TEXT NOT NULL DEFAULT '[]',
+                related_ids    TEXT NOT NULL DEFAULT '[]',
+                sources        INTEGER NOT NULL DEFAULT 0,
+                growth         REAL NOT NULL DEFAULT 1,
+                score          REAL NOT NULL DEFAULT 0,
+                position       INTEGER NOT NULL DEFAULT 0,
+                summary        TEXT NOT NULL DEFAULT '',
+                summary_source TEXT NOT NULL DEFAULT 'extraits',
+                updated_at     TEXT NOT NULL
+            );
             CREATE INDEX IF NOT EXISTS idx_articles_published ON articles (published_at DESC);
             CREATE INDEX IF NOT EXISTS idx_articles_read ON articles (is_read);
             CREATE INDEX IF NOT EXISTS idx_articles_fav ON articles (is_favorite);

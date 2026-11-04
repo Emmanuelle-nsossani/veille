@@ -68,6 +68,31 @@ $this->pageTitle = 'Sources';
 </section>
 
 <section class="panel">
+    <h2>Résumés des tendances</h2>
+    <?php if ($aiKey !== ''): ?>
+        <p>Résumés rédigés par l’IA <strong>activés</strong> (clé …<?= e(substr($aiKey, -4)) ?>, modèle <?= e($config['ai_model']) ?>).</p>
+        <?php if ($aiError): ?>
+            <p class="err">Dernier appel en échec (<?= e(relative_date($aiError['at'])) ?>) : <?= e($aiError['message']) ?>.
+                Les résumés sont faits à partir d’extraits en attendant.</p>
+        <?php endif; ?>
+        <form method="post" action="<?= e(url('/sources/ai')) ?>">
+            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+            <input type="hidden" name="action" value="delete">
+            <button type="submit" class="ghost small danger">Retirer la clé</button>
+        </form>
+    <?php else: ?>
+        <p class="muted">Sans clé, chaque tendance est résumée par des extraits de ses articles.
+            Avec une clé API Claude (console.anthropic.com), un vrai résumé est rédigé à chaque récupération.
+            La clé reste sur ton serveur, dans storage/.</p>
+        <form class="stack inline ai-form" method="post" action="<?= e(url('/sources/ai')) ?>">
+            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+            <label>Clé API Claude <input type="password" name="api_key" required autocomplete="off" placeholder="sk-ant-…"></label>
+            <button type="submit">Enregistrer</button>
+        </form>
+    <?php endif; ?>
+</section>
+
+<section class="panel">
     <h2>Automatisation</h2>
 
     <h3>Tâche cron Hostinger (quotidienne)</h3>

@@ -9,6 +9,7 @@ use App\Models\Article;
 use App\Models\Source;
 use App\Services\FeedFetcher;
 use App\Services\ThemeClassifier;
+use App\Services\TrendRefresher;
 
 /**
  * Déclencheur par URL, si tu préfères un service de cron externe
@@ -24,6 +25,8 @@ class CronController extends Controller
         }
         @set_time_limit(300);
         $fetcher = new FeedFetcher($this->config, new Source($this->db), new Article($this->db), new ThemeClassifier($this->themes));
-        $this->json($fetcher->run());
+        $report = $fetcher->run();
+        $report['trends'] = (new TrendRefresher($this->db, $this->config))->run();
+        $this->json($report);
     }
 }

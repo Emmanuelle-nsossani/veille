@@ -35,6 +35,27 @@ class Article
         return array_map([$this, 'hydrate'], $stmt->fetchAll());
     }
 
+    /** Articles par identifiants, dans l'ordre donné (ceux qui n'existent plus sont ignorés). */
+    public function byIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_map('intval', $ids)));
+        if (!$ids) {
+            return [];
+        }
+        $in = implode(',', $ids);
+        $rows = $this->db->query(
+            "SELECT a.id, a.source_id, s.name AS source_name, a.url, a.title, a.summary, a.themes,
+                    a.published_at, a.fetched_at, a.is_read, a.is_favorite
+             FROM articles a JOIN sources s ON s.id = a.source_id
+             WHERE a.id IN ($in)"
+        )->fetchAll();
+        $byId = [];
+        foreach ($rows as $row) {
+            $byId[(int) $row['id']] = $this->hydrate($row);
+        }
+        return array_values(array_filter(array_map(fn ($id) => $byId[$id] ?? null, $ids)));
+    }
+
     public function count(array $filters): int
     {
         [$where, $params] = $this->where($filters);

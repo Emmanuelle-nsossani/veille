@@ -5,6 +5,7 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Models\Article;
+use App\Models\Trend;
 
 class ArticleController extends Controller
 {
@@ -26,6 +27,7 @@ class ArticleController extends Controller
             'total'       => $total,
             'stats'       => $model->stats(),
             'themeCounts' => $model->countByTheme(array_keys($this->themes)),
+            'trends'      => $page === 1 && $filters['q'] === '' && $filters['theme'] === '' ? (new Trend($this->db))->all() : [],
         ]);
     }
 

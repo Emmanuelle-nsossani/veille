@@ -83,3 +83,24 @@ if (!function_exists('french_today')) {
         return $days[(int) date('w')] . ' ' . (int) date('j') . ' ' . $months[(int) date('n') - 1];
     }
 }
+
+if (!function_exists('trend_url')) {
+    function trend_url(string $slug): string
+    {
+        return url('/trend') . '?t=' . rawurlencode($slug);
+    }
+}
+
+if (!function_exists('growth_badge')) {
+    /** « Nouveau », « ×3 » ou rien, selon la hausse par rapport aux 14 jours précédents. */
+    function growth_badge(float $growth): string
+    {
+        if ($growth >= 6) {
+            return 'Nouveau';
+        }
+        if ($growth >= 2) {
+            return '×' . (int) round($growth);
+        }
+        return '';
+    }
+}

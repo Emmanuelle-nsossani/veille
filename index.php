@@ -45,6 +45,8 @@ $router->post('/sources/add', 'SourceController@add');
 $router->post('/sources/toggle', 'SourceController@toggle');
 $router->post('/sources/delete', 'SourceController@delete');
 $router->post('/refresh', 'SourceController@refresh');
+$router->post('/sources/ai', 'SourceController@saveAi');
+$router->get('/trend', 'TrendController@show');
 
 // Actions AJAX
 $router->post('/articles/favorite', 'ArticleController@toggleFavorite');
@@ -54,6 +56,7 @@ $router->post('/articles/read-all', 'ArticleController@markAllRead');
 // API JSON (future application mobile) + déclencheur cron par URL
 $router->get('/api/articles', 'ApiController@articles');
 $router->get('/api/themes', 'ApiController@themes');
+$router->get('/api/trends', 'ApiController@trends');
 $router->get('/cron', 'CronController@run');
 
 $router->dispatch($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);

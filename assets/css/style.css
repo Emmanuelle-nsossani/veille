@@ -203,3 +203,58 @@ pre { margin: 8px 0; padding: 12px; border-radius: 12px; background: var(--bg); 
     .brand span:last-child { max-width: 7.5em; line-height: 1.1; }
     .nav a, .nav .link { padding: 6px 7px; font-size: .88rem; }
 }
+
+/* Tendances du moment */
+.trends { margin: 0 0 18px; }
+.trends-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.trends-head h2 { margin: 0; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+.flame {
+    display: inline-block; width: 12px; height: 12px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+    background: linear-gradient(135deg, var(--accent-3), var(--accent-2)); margin-right: 2px;
+}
+.trend-list {
+    list-style: none; margin: 0 -16px; padding: 4px 16px 10px; display: flex; gap: 10px;
+    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; scrollbar-width: none;
+}
+.trend-list::-webkit-scrollbar { display: none; }
+.trend-list li { flex: none; width: min(78%, 260px); scroll-snap-align: start; }
+.trend-card {
+    --tc: hsl(calc(265 + var(--i) * 34) 80% 55%);
+    display: grid; gap: 4px; height: 100%; padding: 14px; border-radius: var(--radius); text-decoration: none;
+    background:
+        linear-gradient(var(--surface), var(--surface)) padding-box,
+        linear-gradient(135deg, var(--tc), var(--accent-2), var(--accent-3)) border-box;
+    border: 2px solid transparent; box-shadow: var(--shadow);
+    transition: transform .15s;
+}
+.trend-card:hover { transform: translateY(-2px); }
+.trend-rank { font: 800 .85rem var(--font-display); color: var(--tc); }
+.trend-label { font: 800 1.2rem/1.15 var(--font-display); letter-spacing: -.02em; }
+.trend-meta { font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.trend-badge {
+    padding: 1px 8px; border-radius: 999px; font-size: .72rem; font-weight: 700; color: #fff;
+    background: linear-gradient(90deg, var(--accent-2), var(--accent-3));
+}
+.trend-snippet {
+    font-size: .86rem; color: var(--ink-soft);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* Page d'une tendance */
+.back { margin: 0 0 6px; font-size: .9rem; }
+.back a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.trend-facts { margin: 6px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.summary-box {
+    margin: 0 0 22px; padding: 18px; border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow);
+    border-left: 5px solid var(--accent);
+}
+.summary-box p { margin: 0 0 8px; }
+.summary-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.summary-head h2 { margin: 0; font-size: 1.15rem; }
+.pill { padding: 3px 10px; border-radius: 999px; font-size: .75rem; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.quotes { margin: 0 0 8px; padding-left: 18px; display: grid; gap: 6px; }
+.quotes strong { color: var(--accent); }
+.small { font-size: .82rem; }
+.section-title { margin: 26px 0 10px; font-size: 1.2rem; }
+.ai-form input { width: 100%; }
+@media (min-width: 640px) { .stack.inline.ai-form { grid-template-columns: 1fr auto; } }

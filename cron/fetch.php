@@ -29,6 +29,7 @@ use App\Models\Article;
 use App\Models\Source;
 use App\Services\FeedFetcher;
 use App\Services\ThemeClassifier;
+use App\Services\TrendRefresher;
 
 $config = require ROOT . '/config/config.php';
 date_default_timezone_set($config['timezone']);
@@ -36,6 +37,7 @@ $db = Database::get($config);
 
 $fetcher = new FeedFetcher($config, new Source($db), new Article($db), new ThemeClassifier(require ROOT . '/config/themes.php'));
 $report = $fetcher->run();
+$report['trends'] = (new TrendRefresher($db, $config))->run();
 
-echo '[' . date('Y-m-d H:i') . "] {$report['new']} nouveaux, {$report['errors']} erreur(s), {$report['purged']} purgé(s)\n";
+echo '[' . date('Y-m-d H:i') . "] {$report['new']} nouveaux, {$report['errors']} erreur(s), {$report['purged']} purgé(s), {$report['trends']} tendance(s)\n";
 echo implode("\n", $report['details']) . "\n";

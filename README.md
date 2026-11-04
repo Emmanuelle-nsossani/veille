@@ -47,6 +47,20 @@ php -S localhost:8000 index.php
 
 Avec `base_path` vidé dans `config/config.php`, puis http://localhost:8000 (la redirection HTTPS du `.htaccess` ne s'applique pas avec ce serveur).
 
+## Tendances du moment
+
+À chaque récupération, le site repère les sujets qui reviennent dans au moins 3 articles de 2 sources
+différentes sur les dernières 48 h (et plus souvent que sur les 14 jours précédents, une fois l'historique suffisant).
+Chaque tendance a sa page avec :
+
+- un **résumé** : rédigé par l'IA si une clé API Claude est enregistrée sur la page Sources
+  (stockée dans `storage/ai.json`, jamais versionnée), sinon composé d'extraits des articles ;
+- les **articles du sujet** ;
+- les **articles connectés** : autres articles de la veille qui partagent ses mots-clés.
+
+Réglages dans `app/Services/TrendDetector.php` (fenêtre, seuils) et `app/Services/Terms.php` (mots ignorés).
+Modèle IA : `ai_model` dans `config/config.php`.
+
 ## Personnaliser
 
 - Thèmes et mots-clés : `config/themes.php` (mots entiers, « s » final toléré)
@@ -59,6 +73,7 @@ L'API JSON est prête (jeton affiché sur la page Sources) :
 
 - `GET /api/articles?theme=ia&view=unread&q=…&limit=50&offset=0&since=2026-11-01`
 - `GET /api/themes`
+- `GET /api/trends` et `GET /api/trends?t=<slug>` (résumé, articles, articles connectés)
 - En-tête : `Authorization: Bearer <jeton>`
 
 ## Mot de passe oublié

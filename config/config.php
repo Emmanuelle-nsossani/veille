@@ -9,6 +9,9 @@ return [
     'timezone'       => 'Europe/Paris',
     'db_path'        => ROOT . '/storage/veille.sqlite',
     'secrets_path'   => ROOT . '/storage/secrets.json',
+    // Clé API Claude pour les résumés de tendances (saisie sur la page Sources, jamais versionnée)
+    'ai_path'        => ROOT . '/storage/ai.json',
+    'ai_model'       => 'claude-haiku-5-5',
     'retention_days' => 60,   // les articles non favoris plus vieux sont supprimés
     'per_page'       => 30,
     'fetch_timeout'  => 15,   // secondes par flux

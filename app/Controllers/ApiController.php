@@ -6,6 +6,7 @@ namespace App\Controllers;
 use App\Core\Auth;
 use App\Core\Controller;
 use App\Models\Article;
+use App\Models\Trend;
 
 /**
  * API JSON en lecture, prévue pour la future application mobile.
@@ -13,6 +14,7 @@ use App\Models\Article;
  *
  * GET /api/articles?theme=ia&q=mistral&view=unread&limit=50&offset=0
  * GET /api/themes
+ * GET /api/trends  (et ?t=<slug>)
  */
 class ApiController extends Controller
 {
@@ -51,6 +53,44 @@ class ApiController extends Controller
             $out[] = ['key' => $key, 'label' => $t['label'], 'color' => $t['color']];
         }
         $this->json(['themes' => $out]);
+    }
+
+    /**
+     * GET /api/trends            → liste des tendances (sans les articles)
+     * GET /api/trends?t=<slug>   → une tendance avec ses articles et les articles connectés
+     */
+    public function trends(): void
+    {
+        if (!$this->authorized()) {
+            return;
+        }
+        $model = new Trend($this->db);
+        $public = fn (array $t) => [
+            'slug'           => $t['slug'],
+            'label'          => $t['label'],
+            'articles_count' => $t['articles'],
+            'sources'        => $t['sources'],
+            'growth'         => $t['growth'],
+            'summary'        => $t['summary'],
+            'summary_source' => $t['summary_source'],
+            'updated_at'     => $t['updated_at'],
+        ];
+
+        if (isset($_GET['t'])) {
+            $trend = $model->find((string) $_GET['t']);
+            if ($trend === null) {
+                $this->json(['error' => 'Tendance introuvable'], 404);
+                return;
+            }
+            $articles = new Article($this->db);
+            $this->json($public($trend) + [
+                'articles' => $articles->byIds($trend['article_ids']),
+                'related'  => $articles->byIds($trend['related_ids']),
+            ]);
+            return;
+        }
+
+        $this->json(['trends' => array_map($public, $model->all())]);
     }
 
     private function authorized(): bool
