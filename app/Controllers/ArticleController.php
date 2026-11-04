@@ -6,6 +6,7 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Models\Article;
 use App\Models\Trend;
+use App\Services\TrendRefresher;
 
 class ArticleController extends Controller
 {
@@ -15,6 +16,10 @@ class ArticleController extends Controller
         $model = new Article($this->db);
 
         $filters = $this->filtersFromQuery();
+        $showTrends = ($_GET['page'] ?? '1') === '1' && $filters['q'] === '' && $filters['theme'] === '';
+        if ($showTrends) {
+            (new TrendRefresher($this->db, $this->config))->runIfNeverDone();
+        }
         $page = max(1, (int) ($_GET['page'] ?? 1));
         $perPage = (int) $this->config['per_page'];
 
@@ -27,7 +32,8 @@ class ArticleController extends Controller
             'total'       => $total,
             'stats'       => $model->stats(),
             'themeCounts' => $model->countByTheme(array_keys($this->themes)),
-            'trends'      => $page === 1 && $filters['q'] === '' && $filters['theme'] === '' ? (new Trend($this->db))->all() : [],
+            'trends'      => $showTrends ? (new Trend($this->db))->all() : [],
+            'showTrends'  => $showTrends,
         ]);
     }
 

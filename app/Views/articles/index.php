@@ -18,7 +18,7 @@ $activeTheme = $filters['theme'] !== '' ? $themes[$filters['theme']] : null;
     </dl>
 </section>
 
-<?php if (!empty($trends)): ?>
+<?php if (!empty($showTrends) && $stats['total'] > 0): ?>
     <?php require ROOT . '/app/Views/partials/trends-strip.php'; ?>
 <?php endif; ?>
 

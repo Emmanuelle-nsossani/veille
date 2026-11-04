@@ -6,6 +6,10 @@
         <h2 id="trends-title"><span class="flame" aria-hidden="true"></span>Tendances du moment</h2>
         <span class="muted">sur 48 h</span>
     </div>
+    <?php if (!$trends): ?>
+        <p class="trends-empty">Pas encore de tendance : un sujet apparaît ici dès que 3 articles de 2 sources différentes
+            en parlent en 48 h. Les tendances sont recalculées à chaque récupération.</p>
+    <?php else: ?>
     <ol class="trend-list">
         <?php foreach ($trends as $i => $t): ?>
             <li>
@@ -21,4 +25,5 @@
             </li>
         <?php endforeach; ?>
     </ol>
+    <?php endif; ?>
 </section>

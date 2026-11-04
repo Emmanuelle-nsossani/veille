@@ -49,7 +49,17 @@ class TrendRefresher
         }
 
         $model->replace($rows);
+        $this->db->prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('trends_at', ?)")->execute([date('Y-m-d H:i:s')]);
         return count($rows);
+    }
+
+    /** Calcule les tendances une première fois si cela n'a jamais été fait (ex. juste après une mise à jour). */
+    public function runIfNeverDone(): void
+    {
+        $done = $this->db->query("SELECT value FROM meta WHERE key = 'trends_at'")->fetchColumn();
+        if (!$done) {
+            $this->run();
+        }
     }
 
     private function sameSet(array $a, array $b): bool

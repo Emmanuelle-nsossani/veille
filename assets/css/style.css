@@ -258,3 +258,7 @@ pre { margin: 8px 0; padding: 12px; border-radius: 12px; background: var(--bg); 
 .section-title { margin: 26px 0 10px; font-size: 1.2rem; }
 .ai-form input { width: 100%; }
 @media (min-width: 640px) { .stack.inline.ai-form { grid-template-columns: 1fr auto; } }
+.trends-empty {
+    margin: 0; padding: 12px 14px; border-radius: 14px; font-size: .9rem; color: var(--ink-soft);
+    background: color-mix(in srgb, var(--accent-3) 10%, var(--surface)); border: 1.5px dashed color-mix(in srgb, var(--accent-3) 45%, transparent);
+}
