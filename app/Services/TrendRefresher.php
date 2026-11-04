@@ -14,6 +14,9 @@ use PDO;
  */
 class TrendRefresher
 {
+    /** À augmenter quand la méthode de détection change, pour forcer un recalcul en ligne. */
+    private const VERSION = '2';
+
     public function __construct(private PDO $db, private array $config)
     {
     }
@@ -21,7 +24,7 @@ class TrendRefresher
     /** @return int nombre de tendances */
     public function run(): int
     {
-        $detector = new TrendDetector($this->db);
+        $detector = new TrendDetector($this->db, $this->config);
         $articles = new Article($this->db);
         $model = new Trend($this->db);
         $summarizer = new Summarizer($this->config);
@@ -49,15 +52,15 @@ class TrendRefresher
         }
 
         $model->replace($rows);
-        $this->db->prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('trends_at', ?)")->execute([date('Y-m-d H:i:s')]);
+        $this->db->prepare("INSERT OR REPLACE INTO meta (key, value) VALUES ('trends_version', ?)")->execute([self::VERSION]);
         return count($rows);
     }
 
-    /** Calcule les tendances une première fois si cela n'a jamais été fait (ex. juste après une mise à jour). */
+    /** Calcule les tendances si cela n'a jamais été fait avec la méthode actuelle (ex. juste après une mise à jour). */
     public function runIfNeverDone(): void
     {
-        $done = $this->db->query("SELECT value FROM meta WHERE key = 'trends_at'")->fetchColumn();
-        if (!$done) {
+        $version = $this->db->query("SELECT value FROM meta WHERE key = 'trends_version'")->fetchColumn();
+        if ($version !== self::VERSION) {
             $this->run();
         }
     }

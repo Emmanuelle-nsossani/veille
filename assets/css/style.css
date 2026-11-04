@@ -262,3 +262,9 @@ pre { margin: 8px 0; padding: 12px; border-radius: 12px; background: var(--bg); 
     margin: 0; padding: 12px 14px; border-radius: 14px; font-size: .9rem; color: var(--ink-soft);
     background: color-mix(in srgb, var(--accent-3) 10%, var(--surface)); border: 1.5px dashed color-mix(in srgb, var(--accent-3) 45%, transparent);
 }
+.more { margin: 12px 0 0; }
+.more a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.head-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.flash details { margin-top: 6px; font-weight: 400; font-size: .85rem; }
+.flash summary { cursor: pointer; font-weight: 700; }
+.flash-details { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 2px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; }

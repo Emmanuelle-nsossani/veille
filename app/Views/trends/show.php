@@ -12,7 +12,8 @@ $lines = array_filter(array_map('trim', explode("\n", $trend['summary'])));
         <p class="eyebrow"><span class="flame" aria-hidden="true"></span>Tendance du moment</p>
         <h1><?= e($trend['label']) ?></h1>
         <p class="muted trend-facts">
-            <?= $trend['articles'] ?> articles · <?= $trend['sources'] ?> sources en 48 h
+            <?= $trend['articles'] ?> articles · <?= $trend['sources'] ?> sources sur <?= e(period_label((int) $config['trend_days'])) ?>
+            <?php if ($trend['last_at']): ?>· dernier article <?= e(relative_date($trend['last_at'])) ?><?php endif; ?>
             <?php if ($badge = growth_badge($trend['growth'])): ?><span class="trend-badge"><?= e($badge) ?></span><?php endif; ?>
         </p>
     </div>
@@ -40,10 +41,14 @@ $lines = array_filter(array_map('trim', explode("\n", $trend['summary'])));
 
 <h2 class="section-title">Les articles du sujet</h2>
 <ul class="feed">
-    <?php foreach ($articles as $a): ?>
+    <?php foreach (array_slice($articles, 0, 15) as $a): ?>
         <?php require ROOT . '/app/Views/partials/article-card.php'; ?>
     <?php endforeach; ?>
 </ul>
+<?php if (count($articles) > 15): ?>
+    <p class="more"><a href="<?= e(feed_url(['theme' => '', 'view' => 'all', 'q' => $trend['label']])) ?>">
+        Voir les <?= count($articles) - 15 ?> autres articles →</a></p>
+<?php endif; ?>
 
 <h2 class="section-title">Articles connectés</h2>
 <?php if ($related): ?>

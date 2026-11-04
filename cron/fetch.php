@@ -37,6 +37,12 @@ $db = Database::get($config);
 
 $fetcher = new FeedFetcher($config, new Source($db), new Article($db), new ThemeClassifier(require ROOT . '/config/themes.php'));
 $report = $fetcher->run();
+if (in_array('--historique', $argv, true)) {
+    // php cron/fetch.php --historique : récupère aussi les pages précédentes des flux
+    $history = $fetcher->backfill((int) $config['trend_days'], 10);
+    $report['new'] += $history['new'];
+    $report['details'] = array_merge($report['details'], $history['details']);
+}
 $report['trends'] = (new TrendRefresher($db, $config))->run();
 
 echo '[' . date('Y-m-d H:i') . "] {$report['new']} nouveaux, {$report['errors']} erreur(s), {$report['purged']} purgé(s), {$report['trends']} tendance(s)\n";

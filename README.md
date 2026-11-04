@@ -49,22 +49,29 @@ Avec `base_path` vidé dans `config/config.php`, puis http://localhost:8000 (la 
 
 ## Tendances du moment
 
-À chaque récupération, le site repère les sujets qui reviennent dans au moins 3 articles de 2 sources
-différentes sur les dernières 48 h (et plus souvent que sur les 14 jours précédents, une fois l'historique suffisant).
-Chaque tendance a sa page avec :
+Le site repère les sujets d'actualité des **3 derniers mois** (`trend_days` dans `config/config.php`) :
 
-- un **résumé** : rédigé par l'IA si une clé API Claude est enregistrée sur la page Sources
-  (stockée dans `storage/ai.json`, jamais versionnée), sinon composé d'extraits des articles ;
-- les **articles du sujet** ;
-- les **articles connectés** : autres articles de la veille qui partagent ses mots-clés.
+- seuls les **sujets précis** comptent : noms propres, sigles, versions, expressions sans mot courant
+  (« Gemini 3 », « AI Act », « NIS2 », « iOS 27 ») ; les mots génériques (« sécurité », « modèle »)
+  et les expressions banales (« Google modifie ») sont ignorés ;
+- un sujet doit apparaître dans au moins **4 articles** venant d'au moins **3 sources** ;
+- les articles récents pèsent plus lourd, et le badge « En hausse » signale un sujet qui accélère
+  sur les 14 derniers jours (une fois 30 jours d'historique disponibles).
 
-Réglages dans `app/Services/TrendDetector.php` (fenêtre, seuils) et `app/Services/Terms.php` (mots ignorés).
-Modèle IA : `ai_model` dans `config/config.php`.
+Chaque tendance a sa page : un **résumé** (rédigé par l'IA si une clé API Claude est enregistrée
+sur la page Sources, sinon des extraits), les **articles du sujet** et les **articles connectés**.
+
+### Historique
+
+Un flux RSS ne donne que ses derniers articles. Le bouton **Récupérer l'historique (3 mois)** de la
+page Sources va chercher les pages précédentes des flux qui le permettent (`?paged=N`, WordPress
+notamment), jusqu'à 3 mois. En ligne de commande : `php cron/fetch.php --historique`.
+Les articles sont conservés 120 jours (`retention_days`).
 
 ## Personnaliser
 
 - Thèmes et mots-clés : `config/themes.php` (mots entiers, « s » final toléré)
-- Durée de conservation des articles (60 jours, favoris jamais supprimés) : `config/config.php`
+- Durée de conservation des articles (120 jours, favoris jamais supprimés) : `config/config.php`
 - Sources : directement depuis la page /sources du site
 
 ## Vers l'application mobile

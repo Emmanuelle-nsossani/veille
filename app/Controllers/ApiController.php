@@ -73,6 +73,7 @@ class ApiController extends Controller
             'growth'         => $t['growth'],
             'summary'        => $t['summary'],
             'summary_source' => $t['summary_source'],
+            'last_at'        => $t['last_at'],
             'updated_at'     => $t['updated_at'],
         ];
 

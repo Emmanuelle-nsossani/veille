@@ -137,6 +137,13 @@ class Article
         return $stmt->rowCount() > 0;
     }
 
+    public function existsGuid(string $guid): bool
+    {
+        $stmt = $this->db->prepare('SELECT 1 FROM articles WHERE guid = ? LIMIT 1');
+        $stmt->execute([$guid]);
+        return (bool) $stmt->fetchColumn();
+    }
+
     /** Supprime les articles non favoris plus vieux que $days jours. */
     public function purge(int $days): int
     {

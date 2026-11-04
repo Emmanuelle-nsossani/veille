@@ -86,6 +86,24 @@ class SourceController extends Controller
         $this->redirect('/sources');
     }
 
+    /** Récupère les pages précédentes des flux pour couvrir la période des tendances. */
+    public function backfill(): void
+    {
+        $this->requireLogin();
+        $this->requireCsrf();
+        @set_time_limit(300);
+        $fetcher = new FeedFetcher($this->config, new Source($this->db), new Article($this->db), new ThemeClassifier($this->themes));
+        // Marge de sécurité : on s'arrête avant que le serveur coupe la requête
+        $report = $fetcher->backfill((int) $this->config['trend_days'], 10, time() + 200);
+        $trends = (new TrendRefresher($this->db, $this->config))->run();
+        $this->flash(
+            $report['new'] ? 'success' : 'warning',
+            "Historique : {$report['new']} article(s) plus ancien(s) ajouté(s), $trends tendance(s) recalculée(s).",
+            $report['details']
+        );
+        $this->redirect('/sources');
+    }
+
     /** Récupération manuelle depuis l'interface. */
     public function refresh(): void
     {

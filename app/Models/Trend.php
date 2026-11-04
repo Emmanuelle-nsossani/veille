@@ -33,9 +33,9 @@ class Trend
     {
         $insert = $this->db->prepare(
             'INSERT INTO trends (slug, term, label, terms, article_ids, related_ids, sources, growth, score, position,
-                                 summary, summary_source, updated_at)
+                                 summary, summary_source, last_at, updated_at)
              VALUES (:slug, :term, :label, :terms, :article_ids, :related_ids, :sources, :growth, :score, :position,
-                     :summary, :summary_source, :updated_at)'
+                     :summary, :summary_source, :last_at, :updated_at)'
         );
         $this->db->beginTransaction();
         try {
@@ -54,6 +54,7 @@ class Trend
                     ':position'       => $position,
                     ':summary'        => $t['summary'],
                     ':summary_source' => $t['summary_source'],
+                    ':last_at'        => $t['last_at'] ?? '',
                     ':updated_at'     => date('Y-m-d H:i:s'),
                 ]);
             }

@@ -92,15 +92,29 @@ if (!function_exists('trend_url')) {
 }
 
 if (!function_exists('growth_badge')) {
-    /** « Nouveau », « ×3 » ou rien, selon la hausse par rapport aux 14 jours précédents. */
+    /** « En hausse »… selon l'accélération des 14 derniers jours par rapport au reste de la période. */
     function growth_badge(float $growth): string
     {
-        if ($growth >= 6) {
-            return 'Nouveau';
+        if ($growth >= 4) {
+            return 'En forte hausse';
         }
         if ($growth >= 2) {
-            return '×' . (int) round($growth);
+            return 'En hausse';
         }
         return '';
+    }
+}
+
+if (!function_exists('period_label')) {
+    /** 90 → « 3 mois », 14 → « 14 jours », 2 → « 48 h ». */
+    function period_label(int $days): string
+    {
+        if ($days <= 2) {
+            return ($days * 24) . ' h';
+        }
+        if ($days >= 28 && $days % 30 < 3) {
+            return (int) round($days / 30) . ' mois';
+        }
+        return $days . ' jours';
     }
 }

@@ -64,6 +64,76 @@ class FeedFetcher
         return $report;
     }
 
+    /**
+     * Va chercher les articles plus anciens que ceux du flux, page par page.
+     * Fonctionne avec les flux qui acceptent ?paged=N (WordPress et beaucoup d'autres) :
+     * pour les autres, la page 2 renvoie les mêmes articles et on s'arrête aussitôt.
+     *
+     * @return array{sources:int, new:int, errors:int, details:string[]}
+     */
+    public function backfill(int $days, int $maxPages = 10, ?int $deadline = null): array
+    {
+        $report = ['sources' => 0, 'new' => 0, 'errors' => 0, 'details' => []];
+        $cutoff = strtotime("-$days days");
+
+        foreach ($this->sources->active() as $source) {
+            if ($deadline !== null && time() >= $deadline) {
+                $report['details'][] = 'ARRÊT   temps écoulé : relance « Récupérer l’historique » pour continuer';
+                break;
+            }
+            $report['sources']++;
+            $new = 0;
+            $pages = 0;
+
+            try {
+                // La page 1 sert de référence : un flux sans pagination renvoie la même chose en page 2
+                $seen = array_column($this->parse($this->download($source['url'])), 'guid');
+
+                for ($page = 2; $page <= $maxPages + 1; $page++) {
+                    if ($deadline !== null && time() >= $deadline) {
+                        break;
+                    }
+                    $url = $source['url'] . (str_contains($source['url'], '?') ? '&' : '?') . 'paged=' . $page;
+                    try {
+                        $items = $this->parse($this->download($url));
+                    } catch (\Throwable $e) {
+                        break; // page inexistante (souvent 404) : fin de l'historique
+                    }
+                    $guids = array_column($items, 'guid');
+                    if (!$items || !array_diff($guids, $seen)) {
+                        break; // page vide ou déjà vue : pas (ou plus) de pagination
+                    }
+                    $seen = array_merge($seen, $guids);
+                    $pages++;
+
+                    $oldestTs = time();
+                    foreach ($items as $item) {
+                        $ts = (int) strtotime($item['published_at']);
+                        $oldestTs = min($oldestTs, $ts);
+                        if ($ts < $cutoff) {
+                            continue;
+                        }
+                        $themes = $this->classifier->classify($item['title'], $item['summary']);
+                        if ($this->articles->insert((int) $source['id'], $item, $themes)) {
+                            $new++;
+                        }
+                    }
+                    if ($oldestTs < $cutoff) {
+                        break; // on a atteint le début de la période
+                    }
+                }
+                $report['new'] += $new;
+                $report['details'][] = $pages
+                    ? "OK      {$source['name']} : +$new article(s) sur $pages page(s) d’historique"
+                    : "—       {$source['name']} : ce flux ne propose pas d’historique";
+            } catch (\Throwable $e) {
+                $report['errors']++;
+                $report['details'][] = "ERREUR  {$source['name']} : " . mb_substr($e->getMessage(), 0, 200);
+            }
+        }
+        return $report;
+    }
+
     private function download(string $url): string
     {
         $timeout = (int) $this->config['fetch_timeout'];

@@ -98,6 +98,19 @@ class Database
             CREATE INDEX IF NOT EXISTS idx_articles_read ON articles (is_read);
             CREATE INDEX IF NOT EXISTS idx_articles_fav ON articles (is_favorite);
         SQL);
+
+        // Colonnes ajoutées après la première version (bases déjà créées sur le serveur)
+        self::addColumn($pdo, 'trends', 'last_at', "TEXT NOT NULL DEFAULT ''");
+    }
+
+    private static function addColumn(PDO $pdo, string $table, string $column, string $definition): void
+    {
+        foreach ($pdo->query("PRAGMA table_info($table)") as $col) {
+            if ($col['name'] === $column) {
+                return;
+            }
+        }
+        $pdo->exec("ALTER TABLE $table ADD COLUMN $column $definition");
     }
 
     /** Ajoute les sources de départ une seule fois (pas après une suppression volontaire). */

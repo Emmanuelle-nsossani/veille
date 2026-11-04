@@ -67,9 +67,9 @@ class Controller
         echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
     }
 
-    protected function flash(string $type, string $message): void
+    protected function flash(string $type, string $message, array $details = []): void
     {
-        $_SESSION['flash'][] = ['type' => $type, 'message' => $message];
+        $_SESSION['flash'][] = ['type' => $type, 'message' => $message, 'details' => $details];
     }
 
     private function pullFlashes(): array

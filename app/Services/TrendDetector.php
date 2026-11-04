@@ -6,87 +6,109 @@ namespace App\Services;
 use PDO;
 
 /**
- * Repère les sujets tendances : les termes qui reviennent dans plusieurs
- * articles de sources différentes sur les dernières 48 h, et plus souvent
- * que d'habitude (comparaison avec les 14 jours précédents).
+ * Repère les sujets d'actualité sur une période glissante (3 mois par défaut) :
+ * les sujets précis (noms propres, sigles, versions, expressions de deux mots)
+ * repris par plusieurs articles et plusieurs sources. Les articles récents
+ * pèsent plus lourd, et un sujet qui accélère sur les 14 derniers jours est mis en avant.
  */
 class TrendDetector
 {
-    public const RECENT_HOURS = 48;
-    private const BASE_DAYS = 14;
-    private const MIN_ARTICLES = 3;
-    private const MIN_SOURCES = 2;
-    private const MAX_TRENDS = 6;
+    private const RECENT_DAYS = 14;     // pour mesurer la hausse
     private const MAX_GROWTH = 6.0;
-    private const MIN_HISTORY = 100; // articles sur la période de référence
+    private const MIN_HISTORY_DAYS = 30; // historique minimal avant d'afficher une hausse
 
-    public function __construct(private PDO $db)
+    private int $days;
+    private int $minArticles;
+    private int $minSources;
+    private int $maxTrends;
+
+    public function __construct(private PDO $db, array $config = [])
     {
+        $this->days = max(2, (int) ($config['trend_days'] ?? 90));
+        $this->minArticles = max(2, (int) ($config['trend_min_articles'] ?? 4));
+        $this->minSources = max(1, (int) ($config['trend_min_sources'] ?? 3));
+        $this->maxTrends = max(1, (int) ($config['trend_max'] ?? 8));
     }
 
     /**
      * @return array<int, array{key:string, slug:string, label:string, terms:string[], article_ids:int[],
-     *     sources:int, growth:float, score:float}>
+     *     sources:int, growth:float, score:float, last_at:string}>
      */
     public function detect(?int $now = null): array
     {
         $now ??= time();
-        $recentFrom = $now - self::RECENT_HOURS * 3600;
-        $baseFrom = $recentFrom - self::BASE_DAYS * 86400;
+        $from = $now - $this->days * 86400;
+        $recentFrom = $now - self::RECENT_DAYS * 86400;
+        $tau = $this->days / 4; // un article de ~2 mois pèse environ 4 fois moins qu'un article du jour
 
         $stmt = $this->db->prepare('SELECT id, source_id, title, published_at FROM articles WHERE published_at >= ?');
-        $stmt->execute([date('Y-m-d H:i:s', $baseFrom)]);
+        $stmt->execute([date('Y-m-d H:i:s', $from)]);
 
-        $recent = [];   // clé => [ids d'articles]
-        $sources = [];  // clé => [source_id => true]
-        $labels = [];   // clé => [forme affichée => nombre]
-        $base = [];     // clé => nombre d'articles sur la période de référence
+        $ids = $sources = $labels = $weight = $precise = $recent = [];
         $published = [];
-        $baseRows = 0;
+        $total = 0;
+        $oldest = $now;
 
         foreach ($stmt as $row) {
-            $isRecent = strtotime($row['published_at']) >= $recentFrom;
-            $baseRows += $isRecent ? 0 : 1;
-            foreach (Terms::extract($row['title']) as $key => $display) {
-                if (!$isRecent) {
-                    $base[$key] = ($base[$key] ?? 0) + 1;
-                    continue;
-                }
-                $recent[$key][] = (int) $row['id'];
+            $id = (int) $row['id'];
+            $ts = (int) strtotime($row['published_at']);
+            $oldest = min($oldest, $ts);
+            $published[$id] = $row['published_at'];
+            $total++;
+            $w = exp(-max(0, $now - $ts) / 86400 / $tau);
+
+            foreach (Terms::extract($row['title'], true, $specific) as $key => $display) {
+                $ids[$key][] = $id;
                 $sources[$key][(int) $row['source_id']] = true;
                 $labels[$key][$display] = ($labels[$key][$display] ?? 0) + 1;
-            }
-            if ($isRecent) {
-                $published[(int) $row['id']] = $row['published_at'];
+                $weight[$key] = ($weight[$key] ?? 0) + $w;
+                $precise[$key] = ($precise[$key] ?? 0) + ($specific[$key] ? 1 : 0);
+                $recent[$key] = ($recent[$key] ?? 0) + ($ts >= $recentFrom ? 1 : 0);
             }
         }
+        if ($total === 0) {
+            return [];
+        }
 
-        // Sans historique suffisant (premiers jours), la hausse ne veut rien dire : on l'ignore
-        $hasHistory = $baseRows >= self::MIN_HISTORY;
+        $historyDays = ($now - $oldest) / 86400;
+        $hasHistory = $historyDays >= self::MIN_HISTORY_DAYS;
+        $olderDays = max(1, min($this->days, $historyDays) - self::RECENT_DAYS);
 
-        // Candidats : assez d'articles et au moins deux sources
         $candidates = [];
-        foreach ($recent as $key => $ids) {
-            $n = count($ids);
+        foreach ($ids as $key => $list) {
+            $n = count($list);
             $nSources = count($sources[$key]);
-            if ($n < self::MIN_ARTICLES || $nSources < self::MIN_SOURCES) {
+            if ($n < $this->minArticles || $nSources < $this->minSources) {
                 continue;
             }
-            $perDayRecent = $n / (self::RECENT_HOURS / 24);
-            $perDayBase = (($base[$key] ?? 0) + 1) / self::BASE_DAYS;
-            $growth = $hasHistory ? min(self::MAX_GROWTH, $perDayRecent / $perDayBase) : 1.0;
             $isPair = str_contains($key, ' ');
+            $isPrecise = $precise[$key] / $n >= 0.5;
+            if (!$isPrecise) {
+                continue; // mot courant (« sécurité ») ou expression banale (« Google modifie ») : pas un sujet
+            }
+
+            $growth = 1.0;
+            if ($hasHistory) {
+                $ratePerDayRecent = $recent[$key] / self::RECENT_DAYS;
+                $ratePerDayOlder = ($n - $recent[$key] + 1) / $olderDays;
+                $growth = min(self::MAX_GROWTH, $ratePerDayRecent / $ratePerDayOlder);
+            }
+            $share = $n / $total; // les mots présents partout (« Google ») sont moins parlants
 
             $candidates[$key] = [
                 'key'     => $key,
-                'ids'     => $ids,
+                'ids'     => $list,
                 'sources' => $nSources,
                 'growth'  => round($growth, 1),
-                'score'   => $n * sqrt($growth) * (1 + 0.2 * ($nSources - self::MIN_SOURCES)) * ($isPair ? 1.3 : 1.0),
+                'score'   => $weight[$key]
+                    * (1 + 0.25 * ($nSources - $this->minSources))
+                    * ($isPair ? 1.3 : 1.0)
+                    * (1 + 0.15 * max(0.0, min($growth, 5.0) - 1))
+                    / (1 + 10 * $share),
             ];
         }
 
-        // Un mot seul déjà couvert par une paire qui le contient (« Apple » dans « Apple Vision ») s'efface
+        // Un mot seul déjà couvert par une paire qui le contient (« Gemini » dans « Gemini 3 ») s'efface
         foreach ($candidates as $key => $c) {
             if (str_contains($key, ' ')) {
                 continue;
@@ -114,7 +136,7 @@ class TrendDetector
                 }
             }
             unset($trend);
-            if (count($trends) < self::MAX_TRENDS) {
+            if (count($trends) < $this->maxTrends) {
                 $trends[] = [
                     'key'         => $c['key'],
                     'slug'        => Terms::slug($c['key']),
@@ -132,6 +154,7 @@ class TrendDetector
         foreach ($trends as &$trend) {
             usort($trend['article_ids'], fn ($a, $b) => strcmp($published[$b] ?? '', $published[$a] ?? ''));
             $trend['sources'] = $this->countSources($trend['article_ids']);
+            $trend['last_at'] = $published[$trend['article_ids'][0]] ?? date('Y-m-d H:i:s', $now);
         }
         unset($trend);
 
@@ -209,6 +232,11 @@ class TrendDetector
             return [$forms[$b], preg_match('/\p{Lu}/u', (string) $b)] <=> [$forms[$a], preg_match('/\p{Lu}/u', (string) $a)];
         });
         $label = (string) array_key_first($forms);
+        // Majuscule initiale, sauf si le mot a déjà sa propre casse (« iOS », « eBay »)
+        $first = (string) strtok($label, ' ');
+        if (preg_match('/\p{Lu}/u', mb_substr($first, 1))) {
+            return $label;
+        }
         return mb_strtoupper(mb_substr($label, 0, 1)) . mb_substr($label, 1);
     }
 

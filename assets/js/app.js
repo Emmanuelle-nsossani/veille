@@ -42,9 +42,9 @@
     });
 
     // Bouton « Récupérer maintenant » : état de chargement
-    document.querySelector('.js-refresh')?.addEventListener('submit', (event) => {
+    document.querySelectorAll('.js-refresh').forEach((form) => form.addEventListener('submit', (event) => {
         const btn = event.target.querySelector('button');
-        btn.textContent = 'Récupération en cours…';
+        btn.textContent = 'Récupération en cours… (jusqu’à 3 min)';
         btn.classList.add('is-loading');
-    });
+    }));
 })();

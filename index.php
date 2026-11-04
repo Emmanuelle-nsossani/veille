@@ -46,6 +46,7 @@ $router->post('/sources/toggle', 'SourceController@toggle');
 $router->post('/sources/delete', 'SourceController@delete');
 $router->post('/refresh', 'SourceController@refresh');
 $router->post('/sources/ai', 'SourceController@saveAi');
+$router->post('/sources/backfill', 'SourceController@backfill');
 $router->get('/trend', 'TrendController@show');
 
 // Actions AJAX

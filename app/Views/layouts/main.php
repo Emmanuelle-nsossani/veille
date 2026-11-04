@@ -36,7 +36,14 @@ $pageTitle = isset($title) ? $title . ' · ' . $appName : $appName;
 
 <main class="container">
     <?php foreach ($flashes as $flash): ?>
-        <div class="flash flash-<?= e($flash['type']) ?>" role="status"><?= e($flash['message']) ?></div>
+        <div class="flash flash-<?= e($flash['type']) ?>" role="status">
+            <?= e($flash['message']) ?>
+            <?php if (!empty($flash['details'])): ?>
+                <details><summary>Détail par source</summary>
+                    <ul class="flash-details"><?php foreach ($flash['details'] as $line): ?><li><?= e($line) ?></li><?php endforeach; ?></ul>
+                </details>
+            <?php endif; ?>
+        </div>
     <?php endforeach; ?>
 
     <?= $content ?>

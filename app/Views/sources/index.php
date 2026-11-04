@@ -8,10 +8,17 @@ $this->pageTitle = 'Sources';
         <p class="eyebrow"><?= count($sources) ?> source<?= count($sources) > 1 ? 's' : '' ?><?= $errors ? " · $errors en erreur" : '' ?></p>
         <h1>Sources</h1>
     </div>
-    <form class="js-refresh" method="post" action="<?= e(url('/refresh')) ?>">
-        <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
-        <button type="submit">Récupérer maintenant</button>
-    </form>
+    <div class="head-actions">
+        <form class="js-refresh" method="post" action="<?= e(url('/refresh')) ?>">
+            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+            <button type="submit">Récupérer maintenant</button>
+        </form>
+        <form class="js-refresh" method="post" action="<?= e(url('/sources/backfill')) ?>"
+              title="Va chercher les articles plus anciens des flux qui le permettent, sur <?= e(period_label((int) $config['trend_days'])) ?>">
+            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
+            <button type="submit" class="ghost">Récupérer l’historique (<?= e(period_label((int) $config['trend_days'])) ?>)</button>
+        </form>
+    </div>
 </section>
 
 <?php if ($sources): ?>

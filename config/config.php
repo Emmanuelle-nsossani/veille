@@ -12,7 +12,12 @@ return [
     // Clé API Claude pour les résumés de tendances (saisie sur la page Sources, jamais versionnée)
     'ai_path'        => ROOT . '/storage/ai.json',
     'ai_model'       => 'claude-haiku-5-5',
-    'retention_days' => 60,   // les articles non favoris plus vieux sont supprimés
+    'retention_days' => 120,  // les articles non favoris plus vieux sont supprimés (garder plus que trend_days)
+    // Tendances : période analysée, seuils et nombre maximum affiché
+    'trend_days'         => 90,  // 3 mois
+    'trend_min_articles' => 4,   // un sujet doit apparaître dans au moins 4 articles…
+    'trend_min_sources'  => 3,   // … venant d'au moins 3 sources différentes
+    'trend_max'          => 8,
     'per_page'       => 30,
     'fetch_timeout'  => 15,   // secondes par flux
     'user_agent'     => 'VeilleNumerique/1.0 (+https://emmanuellecode.fr)',
